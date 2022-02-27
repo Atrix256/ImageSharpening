@@ -92,9 +92,9 @@ int main(int argc, char** argv)
 	}
 
 	std::vector<float> boxLPF = {
-		1.0f, 1.0f, 1.0f,
-		1.0f, 1.0f, 1.0f,
-		1.0f, 1.0f, 1.0f,
+		1.0f / 9.0f, 1.0f / 9.0f, 1.0f / 9.0f,
+		1.0f / 9.0f, 1.0f / 9.0f, 1.0f / 9.0f,
+		1.0f / 9.0f, 1.0f / 9.0f, 1.0f / 9.0f,
 	};
 
 	// Gaussian kernels calculated from http://demofox.org/gauss.html
@@ -116,7 +116,7 @@ int main(int argc, char** argv)
 		0.0000f,	0.0000f,	0.0000f,	0.0001f,	0.0001f,	0.0001f,	0.0000f,	0.0000f,	0.0000f
 	};
 
-	// large gaussian low pass filter
+		// large gaussian low pass filter
 	{
 		printf("LPF\n");
 		std::vector<unsigned char> result = Convolve(src, w, h, c, gaussianLPFSigma1, 9);
@@ -137,21 +137,33 @@ int main(int argc, char** argv)
 		stbi_write_png("out/sharpen.png", w, h, c, result.data(), 0);
 	}
 
+	// box HPF
+	{
+		printf("Box HPF\n");
+		std::vector<unsigned char> result = Convolve(src, w, h, c, MakeHPFFromLPF(boxLPF), 3);
+		stbi_write_png("out/boxhpf.png", w, h, c, result.data(), 0);
+	}
+
 	// box sharpen
 	{
 		printf("Box Sharpen\n");
-		std::vector<unsigned char> result = Convolve(src, w, h, c, MakeSharpenFromLPF(gaussianLPFSigma03), 3);
+		std::vector<unsigned char> result = Convolve(src, w, h, c, MakeSharpenFromLPF(boxLPF), 3);
 		stbi_write_png("out/boxsharpen.png", w, h, c, result.data(), 0);
+	}
+
+	// gauss HPF
+	{
+		printf("Gauss HPF\n");
+		std::vector<unsigned char> result = Convolve(src, w, h, c, MakeHPFFromLPF(gaussianLPFSigma03), 3);
+		stbi_write_png("out/gausshpf.png", w, h, c, result.data(), 0);
 	}
 
 	// gauss sharpen
 	{
 		printf("Gauss Sharpen\n");
-		std::vector<unsigned char> result = Convolve(src, w, h, c, MakeSharpenFromLPF(boxLPF), 3);
+		std::vector<unsigned char> result = Convolve(src, w, h, c, MakeSharpenFromLPF(gaussianLPFSigma03), 3);
 		stbi_write_png("out/gausssharpen.png", w, h, c, result.data(), 0);
 	}
-
-	int ijkl = 0;
 
 	return 0;
 }
